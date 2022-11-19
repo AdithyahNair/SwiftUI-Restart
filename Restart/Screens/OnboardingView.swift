@@ -10,6 +10,9 @@ import SwiftUI
 struct OnboardingView: View {
     // MARK: - Properties
 
+    @State private var buttonWidth = UIScreen.main.bounds.width - 80
+    @State private var buttonOffset: CGFloat = 0
+
     @AppStorage("onboarding") var isOnboardingViewActive: Bool = true
 
     // MARK: - Views
@@ -71,7 +74,7 @@ struct OnboardingView: View {
                         HStack {
                             Capsule()
                                 .fill(Color("ColorRed"))
-                                .frame(width: 80)
+                                .frame(width: buttonOffset > buttonWidth / 2 ? buttonOffset + 72 : buttonOffset + 80)
 
                             Spacer()
                         }
@@ -89,15 +92,28 @@ struct OnboardingView: View {
                                     .foregroundColor(.white)
                                     .font(.system(size: 24).weight(.bold))
                             }
-                            .onTapGesture {
-                                isOnboardingViewActive = false
-                            }
+                            .offset(x: buttonOffset)
+                            .gesture(
+                                DragGesture()
+                                    .onChanged({ gesture in
+                                        if gesture.translation.width > 0 && buttonOffset <= buttonWidth - 80 {
+                                            buttonOffset = gesture.translation.width
+                                        }
+                                    })
+                                    .onEnded({ _ in
+                                        if buttonOffset > buttonWidth / 2 {
+                                            isOnboardingViewActive = false
+                                        } else {
+                                            buttonOffset = 0
+                                        }
+                                    })
+                            )
                             .frame(width: 80, height: 80, alignment: .center)
 
                             Spacer()
                         }
                     }
-                    .frame(height: 80)
+                    .frame(width: buttonWidth, height: 80)
                     .padding()
                 }
             }
