@@ -12,10 +12,7 @@ struct HomeView: View {
 
     @AppStorage("onboarding") var isOnboardingViewActive: Bool = false
     @State private var isAnimating: Bool = false
-    
-    private func reverseBool() -> Bool {
-        return isAnimating ? false : true
-    }
+    @State private var imageOffset = 0
 
     var body: some View {
         VStack(spacing: 20) {
@@ -23,12 +20,16 @@ struct HomeView: View {
 
             ZStack {
                 CircleGroupView(circleColor: .gray, circleOpacity: 0.1)
-                    .offset(y: isAnimating ? 40 : -40)
-                    .animation(.easeIn(duration: 5), value: isAnimating)
+
                 Image("character-2")
                     .resizable()
                     .scaledToFit()
                     .padding()
+                    .offset(y: isAnimating ? 35 : -35)
+                    .animation(Animation
+                        .easeIn(duration: 3)
+                        .repeatForever()
+                        , value: isAnimating)
             }
 
             Spacer()
@@ -45,7 +46,10 @@ struct HomeView: View {
 
             Button {
                 // Action
-                isOnboardingViewActive = true
+                withAnimation(Animation.easeOut(duration: 3)) {
+                    isOnboardingViewActive = true
+                }
+               
             } label: {
                 Image(systemName: "restart.circle.fill")
                     .imageScale(.large)
@@ -56,8 +60,10 @@ struct HomeView: View {
             .buttonBorderShape(.capsule)
             .controlSize(.large)
         }
-        .onAppear() {
-            isAnimating = reverseBool()
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
+                isAnimating = true
+            })
         }
     }
 }
