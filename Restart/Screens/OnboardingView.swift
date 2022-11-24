@@ -12,6 +12,9 @@ struct OnboardingView: View {
 
     @State private var buttonWidth = UIScreen.main.bounds.width - 80
     @State private var buttonOffset: CGFloat = 0
+    @State private var imageOffset: CGSize = .zero
+    @State private var opacityIndicator: Double = 1.0
+    @State private var titleText: String = "Share."
     @State private var isAnimating: Bool = false
 
     // MARK: - Functions
@@ -29,10 +32,11 @@ struct OnboardingView: View {
                 Spacer()
 
                 VStack(spacing: 0) {
-                    Text("Share.")
+                    Text(titleText)
                         .font(.system(size: 60))
                         .fontWeight(.heavy)
                         .foregroundColor(.white)
+                        .transition(.opacity)
 
                     Text(" It's not how much we give but how much love we put into giving.")
                         .font(.title3)
@@ -46,13 +50,45 @@ struct OnboardingView: View {
 
                 ZStack {
                     CircleGroupView(circleColor: .white, circleOpacity: 0.2)
+                        .offset(x: imageOffset.width * -1)
+                        .blur(radius: abs(imageOffset.width) / 5)
+                        .animation(.easeOut(duration: 1), value: imageOffset)
+
                     ZStack {
                         Image("character-1")
                             .resizable()
                             .scaledToFit()
                             .opacity(isAnimating ? 1 : 0)
-                            .animation(.easeIn(duration: 1), value: isAnimating)
+                            .animation(.easeOut(duration: 1), value: isAnimating)
+                            .offset(x: imageOffset.width, y: 0)
+                            .rotationEffect(.degrees(Double(imageOffset.width / 24)))
+                            .gesture(
+                                DragGesture()
+                                    .onChanged({ gesture in
+                                        if abs(gesture.translation.width) <= 180 {
+                                            imageOffset = gesture.translation
+                                            opacityIndicator = 0
+                                            titleText = "Give."
+                                        }
+                                    })
+                                    .onEnded({ _ in
+                                        withAnimation(Animation.linear(duration: 1)) {                   imageOffset = .zero
+                                            opacityIndicator = 1
+                                            titleText = "Share."
+                                        }
+                                    })
+                            )
                     }
+                    .overlay(
+                        Image(systemName: "arrow.left.and.right.circle")
+                            .foregroundColor(.white)
+                            .font(.system(size: 40, weight: .ultraLight))
+                            .offset(y: 20)
+                            .opacity(isAnimating ? 1 : 0)
+                            .opacity(opacityIndicator)
+                            .animation(.easeIn(duration: 1).delay(1), value: isAnimating)
+                        , alignment: .bottom
+                    )
                 }
 
                 Spacer()
